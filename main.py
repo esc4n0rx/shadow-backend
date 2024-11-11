@@ -1,13 +1,13 @@
 # main.py
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List
+from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 origins = [
-    "https://shadowchatx.vercel.app",  
+    "https://shadowchatx.vercel.app",
     "http://localhost:3000",
 ]
 
@@ -19,11 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: dict[str, List[WebSocket]] = {}
+        self.active_connections: Dict[str, List[WebSocket]] = {}
 
     async def connect(self, room_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -53,13 +51,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             data = await websocket.receive_json()
             message_type = data.get("type")
             if message_type == "join":
-                # Usuário entrou na sala
                 pass
             elif message_type == "leave":
-                # Usuário saiu da sala
                 pass
             elif message_type == "message":
-                # Mensagem enviada pelo usuário
                 await manager.broadcast(room_id, data)
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
