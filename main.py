@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "https://shadowchatx.vercel.app",
+    "https://shadow-chat-iota.vercel.app/",
     "http://localhost:3000",
 ]
 
