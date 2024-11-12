@@ -1,8 +1,10 @@
 # main.py
 
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 app = FastAPI()
 
@@ -58,3 +60,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await manager.broadcast(room_id, data)
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
