@@ -39,9 +39,10 @@ class ConnectionManager:
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast(self, room_id: str, message: dict):
+    async def broadcast(self, room_id: str, message: dict, sender: WebSocket):
         for connection in self.active_connections.get(room_id, []):
-            await connection.send_json(message)
+            if connection != sender:
+                await connection.send_json(message)
 
 manager = ConnectionManager()
 
@@ -57,7 +58,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif message_type == "leave":
                 pass
             elif message_type == "message":
-                await manager.broadcast(room_id, data)
+                await manager.broadcast(room_id, data, websocket) 
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
 
