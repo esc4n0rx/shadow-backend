@@ -58,10 +58,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif message_type == "leave":
                 pass
             elif message_type == "message":
-                await manager.broadcast(room_id, data, websocket) 
+                await manager.broadcast(room_id, data, websocket)
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True, ws_max_size=16 * 1024 * 1024)
