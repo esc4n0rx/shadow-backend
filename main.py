@@ -1,10 +1,12 @@
-# main.py
-
 import os
+import base64
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
+from pydub import AudioSegment
+from pydub.effects import speedup
 import uvicorn
+from io import BytesIO
 
 app = FastAPI()
 
@@ -46,6 +48,21 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+def modulate_audio(audio_data: bytes) -> bytes:
+
+    audio = AudioSegment.from_file(BytesIO(audio_data), format="wav")
+    
+    lowered_pitch_audio = audio._spawn(audio.raw_data, overrides={
+        "frame_rate": int(audio.frame_rate * 0.75) 
+    }).set_frame_rate(audio.frame_rate)
+    
+    delay = AudioSegment.silent(duration=50)
+    
+    robotic_audio = lowered_pitch_audio.overlay(delay + lowered_pitch_audio - 10)
+    output = BytesIO()
+    robotic_audio.export(output, format="wav")
+    return output.getvalue()
+
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
     await manager.connect(room_id, websocket)
@@ -53,10 +70,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
             data = await websocket.receive_json()
             message_type = data.get("type")
-            if message_type == "join":
-                pass
-            elif message_type == "leave":
-                pass
+            if message_type == "audio":
+                audio_data = base64.b64decode(data["audio"])
+                
+                modulated_audio = modulate_audio(audio_data)
+                
+                modulated_audio_base64 = base64.b64encode(modulated_audio).decode("utf-8")
+                
+                await manager.broadcast(room_id, {"type": "audio", "audio": modulated_audio_base64}, websocket)
             elif message_type == "message":
                 await manager.broadcast(room_id, data, websocket)
     except WebSocketDisconnect:
