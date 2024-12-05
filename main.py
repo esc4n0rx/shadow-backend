@@ -8,6 +8,8 @@ from pydub.effects import speedup
 import uvicorn
 from io import BytesIO
 
+
+#FASE 1 PROJETO SHADOW BACKEND 
 app = FastAPI()
 
 origins = [
